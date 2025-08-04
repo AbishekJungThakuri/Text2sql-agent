@@ -16,7 +16,6 @@ from langgraph.prebuilt import ToolNode
 from sqlalchemy.engine import URL
 from langchain_core.messages import AIMessage, ToolMessage, HumanMessage
 import re
-import sqlite3
 from langchain_core.tools import tool
 
 load_dotenv()
@@ -474,11 +473,16 @@ Based on the user's question and available tables, call sql_db_schema with ALL p
     
     # # Then fallback to text-based extraction
         for msg in reversed(messages.get("messages", [])):
-         if hasattr(msg, "content") and msg.content:
-            content = msg.content
-            if "SELECT" in content.upper():
-                query = re.search(r"SELECT.*?;", content, re.IGNORECASE | re.DOTALL)
-                if query:
-                    return query.group(0).strip()
-
+            self.logger.info(f"Messages for final sql: {msg}")
+            if hasattr(msg, "content") and msg.content:
+                content = msg.content
+                if "SELECT" in content.upper():
+                    query = re.search(r"SELECT.*?;", content, re.IGNORECASE | re.DOTALL)
+                    if query:
+                        self.logger.info("SQL query found in message content.")
+                        sql_query = query.group(0).strip()
+                        self.logger.info(f"SQL query found: {sql_query}")
+                        return sql_query
         return None
+
+       
